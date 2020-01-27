@@ -38,6 +38,11 @@ What relationship do you expect to see between movie budget (budget) and domesti
 Run the code on the slide to make a graph. Pay strict attention to spelling, capitalization, and parentheses!
 
 ```{r}
+ggplot(data = bechdel) +
+  geom_point(mapping = aes(x = budget, y = domgross)) + # always put the "+" at the end of the line 
+  scale_x_log10() + # can add logscales with 
+  scale_y_log10() + # can add logscales with 
+  geom_smooth(mapping = aes(x = budget, y = domgross)) # can add a smoth line 
 
 ```
 
@@ -47,12 +52,14 @@ Add `color`, `size`, `alpha`, and `shape` aesthetics to your graph. Experiment.
 
 ```{r}
 ggplot(data = bechdel) +
-  geom_point(mapping = aes(x = budget, y = domgross))
+  geom_point(mapping = aes(x = budget, y = domgross, color = clean_test, shape = binary), alpha = 1/3)
+# alpha makes points lighter
 ```
 
 ## Set vs map
 
 ```{r}
+# To map a constant you have to set it outside the mapping. Note the color = "blue" is outstide the mapping
 ggplot(bechdel) + 
     geom_point(mapping = aes(x = budget, y = domgross), color="blue")
 ```
@@ -62,7 +69,7 @@ ggplot(bechdel) +
 Replace this scatterplot with one that draws boxplots. Use the cheatsheet. Try your best guess.
 
 ```{r}
-ggplot(data = bechdel) + geom_point(aes(x = clean_test, y = budget))
+ggplot(data = bechdel) + geom_boxplot(aes(x = clean_test, y = budget))
 ```
 
 ## Your Turn 4
@@ -70,14 +77,14 @@ ggplot(data = bechdel) + geom_point(aes(x = clean_test, y = budget))
 Make a histogram of the `budget` variable from `bechdel`.
 
 ```{r}
-
+ggplot(data = bechdel) + geom_histogram(aes(x = budget), fill = "blue", bins = 100)
 ```
 
 ## Your Turn 5
 Try to find a better `binwidth` for `budget`.
 
 ```{r}
-
+ggplot(data = bechdel) + geom_histogram(mapping = aes(x = budget), binwidth = 10e6) # 100 * 10 ^ 6
 ```
 
 ## Your Turn 6
@@ -85,6 +92,11 @@ Try to find a better `binwidth` for `budget`.
 Make a density plot of `budget` colored by `clean_test`.
 
 ```{r}
+ggplot(bechdel) +
+  geom_freqpoly(aes(x = budget, color = clean_test), size = 2)
+
+ggplot(bechdel) +
+  geom_histogram(aes(x = budget, fill = clean_test))
 
 ```
 
@@ -93,7 +105,8 @@ Make a density plot of `budget` colored by `clean_test`.
 Make a barchart of `clean_test` colored by `clean_test`.
 
 ```{r}
-
+ggplot(data = bechdel) +
+  geom_bar(aes(x = clean_test, fill = clean_test))
 ```
 
 
@@ -103,8 +116,8 @@ Predict what this code will do. Then run it.
 
 ```{r}
 ggplot(data = bechdel) +
-  geom_point(mapping = aes(x = budget, y = domgross)) +
-  geom_smooth(mapping = aes(x = budget, y = domgross))
+  geom_point(mapping = aes(x = budget, y = domgross, color = clean_test)) +
+  geom_smooth(mapping = aes(x = budget, y = domgross, color = clean_test))
 ```
 
 ## global vs local
