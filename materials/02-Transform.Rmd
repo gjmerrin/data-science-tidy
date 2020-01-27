@@ -38,7 +38,7 @@ In your RMarkdown document?
 
 ```{r}
 vec <- c(1, 2, 3, 10, 100)
-vec
+vec 
 ```
 
 ## Your Turn 4
@@ -53,6 +53,13 @@ What class of data is the vector?
 
 
 ```{r}
+y <- c(1, "R", TRUE)
+y
+class(c1)
+x <- c(1 , 2, 3)
+x
+class(x)
+"x"
 
 ```
 
@@ -65,6 +72,8 @@ Another way to see the class of an object is in the Environment pane. Does the E
 
 ```{r}
 select(babynames, name, prop)
+select(babynames, n)
+dplyr::select(.data = babynames, ... = name, prop) # this is the same as above just spelled out
 ```
 
 ## Your Turn 7
@@ -72,6 +81,9 @@ select(babynames, name, prop)
 Alter the code to select just the `n` column:
 
 ```{r}
+select(babynames, -prop) # Use negative to drop a column
+select(babynames, ends_with("x"))
+select(babynames, starts_with("n"))
 select(babynames, name, prop)
 ```
 
@@ -90,7 +102,18 @@ select(babynames, ends_with("n"))
 ## Filter
 
 ```{r}
-filter(babynames, name == "Amelia")
+filter(babynames, name == "Amelia") # find all the amelia's in the data set
+filter(babynames, prop >= 0.08)
+filter(babynames, name=="Sea")
+filter(babynames, sex=="M", year==2000)
+filter(babynames, sex == "F" & name == "Sea")
+filter(babynames, (n == 5| n == 6)  & year == 1880)
+filter(babynames, name == "Acura" | name == "Lexus" | name == "Yugo")
+filter(babynames, name %in% c("Acura", "Lexus", "Yugo"))
+babynames %>% 
+  filter(name %in% c("Acura", "Lexus", "Yugo")) %>% 
+  count(name)
+
 ```
 
 ## Your Turn 8
@@ -121,7 +144,7 @@ filter(babynames, name == "Sea" | name == "Anemone")
 ## Arrange
 
 ```{r}
-arrange(babynames, n)
+arrange(babynames, n) # default is smalles to largest
 ```
 
 ## Your Turn 10
@@ -129,7 +152,7 @@ arrange(babynames, n)
 Arrange babynames by `n`. Add `prop` as a second (tie breaking) variable to arrange on. Can you tell what the smallest value of `n` is?
 
 ```{r}
-
+arrange(babynames, n, prop)
 ```
 
 ## desc
@@ -144,7 +167,8 @@ Use `desc()` to find the names with the highest prop.
 Then, use `desc()` to find the names with the highest n.
 
 ```{r}
-
+arrange(babynames, desc(prop))
+arrange(babynames, desc(n))
 ```
 
 ## Steps and the pipe
