@@ -47,11 +47,18 @@ a_list <- list(nums = c(8, 9),
 Here are two subsetting commands. Do they return the same values? Run the code chunk above, _and then_ run the code chunks below to confirm
 
 ```{r}
-a_list["nums"] 
+a_list["nums"] # train and contents
+a_list["log"] 
+a_list["cha"] 
 ```
 
 ```{r}
-a_list$nums
+a_list$nums # contents but no train
+a_list$log
+a_list$cha
+a_list[["nums"]] 
+a_list[["log"]] 
+a_list[["cha"]] 
 ```
 
 ## Your Turn 3
@@ -65,7 +72,9 @@ abs(vec)
 
 ```{r, error = TRUE}
 lst <- list(-2, -1, 0, 1, 2)
-abs(lst)
+abs(lst) # cannot take the absolute value of a list 
+lst
+view(lst)
 ```
 
 ## Your Turn 4
@@ -82,7 +91,10 @@ list(student1 = mean(exams$student1),
 
 ```{r}
 library(purrr)
-map(exams, mean)
+map(exams, mean) # use purrr to exam lists - you can write a for loop but we use purrr now 
+
+exams %>% 
+  map(mean)
 ```
 
 ## Your Turn 5
@@ -90,7 +102,8 @@ map(exams, mean)
 Calculate the variance (`var()`) of each student’s exam grades.
 
 ```{r}
-exams 
+exams %>% 
+  map(var) # get the variance of each students exam scores 
 ```
 
 ## Your Turn 6
