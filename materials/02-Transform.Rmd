@@ -434,12 +434,14 @@ Then compute the median rank _for each combination of name and sex_, and arrange
 
 ```{r}
 library(nycflights13)
+library(tidyverse)
 ```
 
 ## Flights data
 ```{r}
 flights
 skim(flights)
+View(flights)
 ```
 
 ## Toy data
@@ -473,10 +475,10 @@ instrument2 <- tribble(
 ## Types of joins
 
 ```{r}
-band %>% left_join(instrument, by = "name")
-band %>% right_join(instrument, by = "name")
-band %>% full_join(instrument, by = "name")
-band %>% inner_join(instrument, by = "name")
+band %>% left_join(instrument, by = "name") # keeps every row on the left 
+band %>% right_join(instrument, by = "name") # keeps every row on the right 
+band %>% full_join(instrument, by = "name") # keeps all rows
+band %>% inner_join(instrument, by = "name") # only keeps rows that match in both datasets 
 ```
 
 
@@ -489,12 +491,32 @@ Which airlines had the largest arrival delays?  Work in groups to complete the c
 
 
 ```{r}
+flights %>% count(carrier) %>% 
+  left_join(airlines, by = "carrier")
+```
+
+```{r}
 flights %>%
   drop_na(arr_delay) %>%
-     #something!     %>%
-  group_by(   #something!  ) %>%
-     #something!      %>%
-  arrange(  #something! )       
+  left_join(airlines, by = "carrier") %>% 
+  group_by(carrier) %>%
+    summarise(
+      average_delay = mean(arr_delay),
+      n = n()
+    ) %>%
+  arrange(desc(average_delay)
+    )  
+
+flights %>%
+  drop_na(arr_delay) %>%
+  group_by(carrier) %>%
+    summarise(
+      average_delay = mean(arr_delay),
+      n = n()
+    ) %>%
+  arrange(desc(average_delay)
+    )  %>% 
+  left_join(airlines, by = "carrier") # put the join at the bottom brings the names in because its after the grouping
 ```
 
 ## Different names
@@ -512,11 +534,31 @@ airports %>% left_join(flights, by = c("faa" = "dest"))
 Find the average delay by destination airport. Find the average delay by _origin_ airport.
 
 ```{r}
-__________ %>%
+flights %>%
   drop_na(arr_delay) %>%
-  group_by(__________) %>% 
-  summarise(delay = mean(arr_delay)) %>%
-  _________(_________, by = ___________)
+  left_join(airports, by = c("dest" = "faa")) %>% 
+  group_by(dest, name) %>% 
+  summarise(
+    delay = mean(arr_delay),
+    n = n(),
+    distance = first(distance),
+    air_time = first(air_time)
+    ) %>%
+  arrange(desc(delay))
+  
+flights %>% 
+  drop_na(arr_delay) %>% 
+  group_by(dest) %>% 
+  summarise(
+    delay = mean(arr_delay),
+    n = n(),
+    distance = first(distance),
+    air_time = first(air_time),
+  ) %>% 
+  arrange(desc(delay)) %>% 
+  left_join(airports, by = c("dest" = "faa"))
+  
+  
 ```
 
 ## Filtering joins
@@ -526,6 +568,17 @@ __________ %>%
 band %>% semi_join(instrument, by = "name")
 band %>% anti_join(instrument, by = "name")
 ```
+
+```{r}
+flights %>% anti_join(airports, by = c("dest" = "faa")) %>% # anti-join is used to see which rows don't have a match
+  count(dest)
+
+airports %>% 
+  anti_join(flights, by = c("faa" = "dest")) %>% 
+  count(faa)
+
+```
+
 
 ## Your Turn 22
 
