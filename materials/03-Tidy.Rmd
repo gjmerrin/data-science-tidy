@@ -88,14 +88,28 @@ bp_systolic2 %>%
     last_measurment1 = last(time),
     last_measurment2 = max(time)
   ) 
+
 bp_systolic %>% 
   pivot_longer(2:4, names_to = "time", values_to = "count") %>% 
   group_by(subject_id) %>% 
   summarise(
   average = mean(count)
  )
+# or
+bp_systolic %>% 
+  pivot_longer(cols = c("time_1", "time_2", "time_3"), names_to = "time", values_to = "count", names_prefix = "time_") %>% # names prefix is a built regex to remove the beginning of words 
+  group_by(subject_id) %>% 
+  summarise(
+  average = mean(count)
+ )
+# or
+bp_systolic %>% 
+  pivot_longer(cols = -subject_id, names_to = "time", values_to = "count") %>% 
+  group_by(subject_id) %>% 
+  summarise(
+  average = mean(count)
+ )
 ```
-
 ## Your Turn 3
 
 On a sheet of paper, draw how the cases data set would look if it had the same values grouped into three columns: **country**, **year**, **n**
@@ -106,8 +120,10 @@ Use `pivot_longer()` to reorganize `table4a` into three columns: **country**, **
 
 ```{r}
 table4a %>% 
-  pivot_longer(2:3, names_to = "year", values_to = "count")
+  pivot_longer(cols = 2:3, names_to = "year", values_to = "cases")
 
+table4a %>% 
+  pivot_longer(cols = 2:3, names_to = "year", values_to = "cases", names_ptypes = list(year = numeric())) # convert year into a numeric 
 ```
 
 ## Your Turn 5
@@ -119,7 +135,8 @@ On a sheet of paper, draw how this data set would look if it had the same values
 Use `pivot_wider()` to reorganize `table2` into four columns: **country**, **year**, **cases**, and **population**.
 
 ```{r}
-table2 
+table2 %>% 
+  pivot_wider(names_from = type, values_from = count)
 ```
 
 ***
