@@ -104,6 +104,17 @@ Calculate the variance (`var()`) of each student’s exam grades.
 ```{r}
 exams %>% 
   map(var) # get the variance of each students exam scores 
+
+exams %>% # other options are map_chr() "character vector", map_dbl() "double vector", map_int() "integer vector", map_lgl() "logical vector", map_df() "data frame"
+  map_dbl(var)
+
+exams %>%
+map_dbl(quantile, prob = 0.9)
+
+exams %>%
+map(length) %>%
+map_lgl(all.equal, 10) # 10 corresponds to the number of entries for each element - here it is student exam scores 
+
 ```
 
 ## Your Turn 6
@@ -111,7 +122,8 @@ exams %>%
 Calculate the max grade (`max()`)for each student. Return the result as a vector.
 
 ```{r}
-exams
+exams %>% 
+  map_dbl(max) # locate the maximum exam score for each student 
 ```
 
 ## Your Turn 7
@@ -125,6 +137,23 @@ Write a function that counts the best exam twice and then takes the average. Use
 ```{r}
 vec <- exams[[1]]
 
+grade <- function(vec) {
+  (sum(vec) - min(vec)) / (length(vec) - 1)
+}
+
+grade(exams[[2]])
+
+exams %>%
+ map_dbl(grade)
+
+grade <- function(x) {
+(sum(x) - min(x)) / (length(x) - 1)
+}
+exams %>%
+ map_dbl(grade)
+
+exams %>%
+map_dbl(function(x) (sum(x) - min(x)) / (length(x) - 1))
 
 ```
 
