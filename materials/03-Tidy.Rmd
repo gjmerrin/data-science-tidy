@@ -81,7 +81,19 @@ Using `bp_systolic2` with `group_by()`, and `summarise()`:
 * Find the last time each subject was measured
 
 ```{r}
-bp_systolic2
+bp_systolic2 %>% 
+  group_by(subject_id) %>% 
+  summarise(
+    average = mean(systolic),
+    last_measurment1 = last(time),
+    last_measurment2 = max(time)
+  ) 
+bp_systolic %>% 
+  pivot_longer(2:4, names_to = "time", values_to = "count") %>% 
+  group_by(subject_id) %>% 
+  summarise(
+  average = mean(count)
+ )
 ```
 
 ## Your Turn 3
@@ -93,7 +105,9 @@ On a sheet of paper, draw how the cases data set would look if it had the same v
 Use `pivot_longer()` to reorganize `table4a` into three columns: **country**, **year**, and **cases**.
 
 ```{r}
-table4a 
+table4a %>% 
+  pivot_longer(2:3, names_to = "year", values_to = "count")
+
 ```
 
 ## Your Turn 5
