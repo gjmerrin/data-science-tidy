@@ -123,7 +123,7 @@ table4a %>%
   pivot_longer(cols = 2:3, names_to = "year", values_to = "cases")
 
 table4a %>% 
-  pivot_longer(cols = 2:3, names_to = "year", values_to = "cases", names_ptypes = list(year = numeric())) # convert year into a numeric 
+  pivot_longer(cols = 2:3, names_to = "year", values_to = "cases", names_ptypes = list(year = integer())) # convert year into an integer  
 ```
 
 ## Your Turn 5
