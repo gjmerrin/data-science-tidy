@@ -8,6 +8,7 @@ library(dplyr)
 library(babynames)
 library(nycflights13)
 library(skimr)
+library(ggplot2)
 ```
 
 ## Babynames
@@ -189,6 +190,10 @@ Use `%>%` to write a sequence of functions that:
 3. Arrange the results so that the most popular names are near the top.
 
 ```{r}
+babynames %>% 
+  filter(sex == "F", year == 2015) %>% 
+  select(name, n) %>% 
+  arrange(desc(n))
 
 ```
 
@@ -199,6 +204,17 @@ Use `%>%` to write a sequence of functions that:
 3. Plot the results as a line graph with `year` on the x axis and `prop` on the y axis
 
 ```{r}
+babynames %>% 
+  filter(name == "Gabriel", sex == "M") %>% 
+  select(year, prop) %>% 
+  ggplot(mapping = aes(x = year, y = prop)) +
+  geom_line()
+
+babynames %>% 
+  filter(name == "Joey", sex == "M") %>% 
+  select(year, prop) %>% 
+  ggplot() +
+  geom_line(mapping = aes(x = year, y = prop))
 
 ```
 
@@ -211,6 +227,18 @@ Use summarise() to compute three statistics about the data:
 3. The total number of children represented in the data
 
 ```{r}
+babynames %>% 
+  summarise(
+    total = sum(n), # variable called total
+    max = max(n)    # variable called max
+  )
+
+babynames %>% 
+  summarise(
+    first = min(year),
+    last = max(year),
+    total = sum(n)
+  )
 
 ```
 
@@ -222,6 +250,30 @@ Extract the rows where `name == "Khaleesi"`. Then use `summarise()` and a summar
 2. The first year Khaleesi appeared in the data
 
 ```{r}
+babynames %>% 
+  filter(name == "Khaleesi") %>% 
+  summarise(
+    total = sum(n),
+    first = min(year)
+  )
+
+babynames %>% 
+  filter(name == "Khaleesi") %>% 
+  select(year, prop) %>% 
+  ggplot() +
+  geom_line(mapping = aes(x = year, y = prop))
+
+babynames %>% 
+  summarise(
+    n = n(),
+    nname = n_distinct(name)
+  )
+
+babynames %>% 
+  group_by(sex) %>% 
+  summarise(
+    total = sum(n)
+  )
 
 ```
 
@@ -245,12 +297,35 @@ pollution <- tribble(
 ```{r}
 pollution %>% 
  summarise(mean = mean(amount), sum = sum(amount), n = n())
+
+pollution %>% 
+  summarise(
+    mean = mean(amount), 
+    sum = sum(amount),
+    n = n()
+  )
 ```
 
 ```{r}
 pollution %>% 
   group_by(city) %>%
   summarise(mean = mean(amount), sum = sum(amount), n = n())
+
+pollution %>% 
+  group_by(city) %>% 
+  summarise(
+    mean = mean(amount),
+    sum = sum(amount),
+    n = n()
+  )
+
+pollution %>% 
+  group_by(city, size) %>% 
+  summarise(
+    mean = mean(amount),
+    sum = sum(amount),
+    n = n()
+  )
 ```
 
 
@@ -259,6 +334,32 @@ pollution %>%
 Use `group_by()`, `summarise()`, and `arrange()` to display the ten most popular baby names. Compute popularity as the total number of children of a single gender given a name.
 
 ```{r}
+
+babynames %>% 
+  group_by(sex, name) %>% 
+  summarise(
+    total = sum(n)
+    ) %>% 
+    arrange(desc(total)) %>% 
+   head(10) %>% # selecting first six rows 
+  ggplot() +
+  geom_col(aes(y = total, x = name, fill = sex))
+
+babynames %>% 
+  group_by(name, sex) %>% 
+  summarise(
+    total = sum(n)
+    ) %>% 
+  summarise(
+    n = n(), 
+    total = sum(total)
+    ) # changes the grouping
+
+babynames %>% 
+  mutate(
+    percent = round(prop*100, 2) # 2 refers to number of decimals
+  )
+
 
 ```
 
@@ -291,6 +392,32 @@ babynames %>%
 Use `min_rank()` and `mutate()` to rank each row in `babynames` from largest `n` to lowest `n`.
 
 ```{r}
+babynames %>% 
+  mutate(
+    rank = min_rank(desc(n))
+  )
+
+babynames %>% 
+  mutate(
+    rank = min_rank(desc(prop))
+  )
+
+babynames %>% 
+  group_by(year, sex) %>% 
+  mutate(
+    rank = min_rank(desc(prop))
+  )
+
+babynames %>% 
+  group_by(year, sex) %>% 
+  mutate(
+    rank = min_rank(desc(prop))
+  ) %>% 
+  group_by(name, sex) %>% 
+  summarise(
+    score = median(rank)
+  ) %>% 
+  arrange(score)
 
 ```
 
