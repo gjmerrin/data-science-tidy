@@ -7,6 +7,10 @@ output: html_document
 library(tidyverse)
 library(lubridate)
 library(fivethirtyeight)
+library(forcats)
+library(stringr)
+library(ggplot2)
+library(hms)
 ```
 
 ## Warm-up / Review
@@ -33,29 +37,89 @@ Brainstorm with your neighbor, all the things you know about that kind of object
 # Example of a factor
 eyes <- factor(x = c("blue", "green", "green"), 
                levels = c("blue", "brown", "green"))
+eyes
+unclass(eyes)
+
 ```
+
+```{r}
+x <- factor(c("characters", "in", "the", "streets"))
+y <- factor(c("integers", "in", "the", "sheets"))
+
+c(x, y)
+
+```
+
+
+```{r}
+
+str(gss_cat$race)
+levels(gss_cat$race)
+nlevels(gss_cat$race)
+class(gss_cat$race)
+
+forcats::fct_count(gss_cat$race)
+
+gss_cat$race %>%  # reverse coded 
+  fct_infreq() %>% 
+  fct_rev() %>% 
+  levels()
+
+gss_cat %>% 
+  count(race)
+
+gss_cat %>% 
+  pull(marital) %>% 
+  levels()
+
+gss_cat %>% 
+  filter(!is.na(race)) %>% 
+  mutate(new_race = fct_rev(race)) %>% 
+  count(new_race, sort = TRUE)
+
+gss_cat %>% 
+  filter(!is.na(race)) %>% 
+  mutate(new_race = fct_lump(race)) %>% 
+  count(new_race, sort = TRUE)
+
+gss_cat %>% 
+  filter(!is.na(race)) %>% 
+  mutate(new_race = fct_lump(race, n = 3)) %>% # can specify the number of categories to lump 
+  count(new_race, sort = TRUE)
+
+```
+
 
 ## Your Turn 2
 
 Fix your summary of average hours of tv watched (`tvhours`) by marital status (`marital`), to drop missing values in `tvhours`, then create a plot to examine the results.
 
 ```{r}
+# two ways of removing missing values 
 gss_cat %>%
+  drop_na(tvhours) %>% 
   group_by(marital) %>% 
   summarise(avg_tvhours = mean(tvhours)) 
-```
 
+gss_cat %>%
+  group_by(marital) %>% 
+  summarise(avg_tvhours = mean(tvhours, na.rm = TRUE)) 
+
+```
 ## Your Turn 3
 
 Fill in the blanks (`   `) to explore the average hours of tv watched by religion.
 
 ```{r, error = TRUE}
 gss_cat %>%
-  drop_na(    ) %>%
-  group_by(    ) %>%
-  summarise(    ) %>%
+  drop_na(tvhours) %>%
+  group_by(relig) %>%
+  summarise(
+    avg_tvhour = mean(tvhours)
+  ) %>%
   ggplot() +
-    geom_point(mapping = aes(x =     , y =    ))
+    geom_point(mapping = aes(x = relig, y = avg_tvhour))
+
 ```
 
 ## Consider
@@ -70,8 +134,23 @@ gss_cat %>%
   ggplot() +
     geom_point(mapping = aes(x = avg_tvhours,
       y = fct_reorder(denom, avg_tvhours)))
-```
 
+gss_cat %>%
+  drop_na(tvhours) %>%
+  group_by(relig) %>%
+  summarise(avg_tvhours = mean(tvhours)) %>%
+  ggplot() +
+    geom_point(mapping = aes(x = avg_tvhours,
+      y = fct_reorder(relig, avg_tvhours))) # fct_order takes one vector  
+
+gss_cat %>%
+  drop_na(tvhours) %>%
+  group_by(relig, age) %>%
+  summarise(avg_tvhours = mean(tvhours)) %>%
+  ggplot() +
+    geom_point(mapping = aes(x = avg_tvhours,
+      y = fct_reorder2(relig, age, avg_tvhours), color = age)) # fct_reorder2 is used when you have 2 vectors to plot
+```
 ## Your Turn 4
 
 Edit the code to also relabel some other Baptist denominations:
@@ -80,14 +159,25 @@ Edit the code to also relabel some other Baptist denominations:
 * "Other baptists" -> "Baptist = Other"
 
 ```{r}
-gss_cat %>%
-  mutate(denom = fct_recode(denom,
-    "Baptist - Southern" = "Southern baptist")
+gss_cat %>% 
+  mutate(
+    denom = fct_recode(denom,"Baptist - Southern" = "Southern baptist"), # rename categories within a variable
+    denom = fct_recode(denom, "Baptists - Dont Know" = "Baptist-dk which"),
+    denom = fct_recode(denom, "Baptists - Other" = "Other baptists"),
   ) %>%
   pull(denom) %>%
-  levels()
-```
+  levels() # givres you the categories of a variable 
 
+gss_cat %>% # this is another way just using "," 
+  mutate(
+    denom = fct_recode(denom,"Baptist - Southern"   = "Southern baptist", 
+                             "Baptists - Dont Know" = "Baptist-dk which", 
+                             "Baptists - Other"     = "Other baptists")
+  ) %>%
+  pull(denom) %>%
+  levels() # gives you the categories of a variable 
+
+```
 ## Your Turn 5
 
 What does the function `detect_denom()` do?
@@ -95,7 +185,7 @@ What does the function `detect_denom()` do?
 ```{r}
 detect_denom <- function(x){
   case_when(
-    str_detect(x, "[Bb]ap") ~ "Baptist", 
+    str_detect(x, "[Bb]ap")  ~ "Baptist", # uses string detect to rename 
     str_detect(x, "[Pp]res") ~ "Presbyterian",
     str_detect(x, "[Ll]uth") ~ "Lutheran",
     str_detect(x, "[Mm]eth") ~ "Methodist",
@@ -105,6 +195,25 @@ detect_denom <- function(x){
 
 gss_cat %>% pull(denom) %>% levels() %>% detect_denom()
 ```
+
+```{r}
+gss_cat %>%
+ drop_na(tvhours) %>%
+ mutate(
+   denom_higher = denom %>%
+     fct_relabel(detect_denom) %>%
+     fct_reorder(tvhours, mean)
+ ) %>%
+  group_by(denom_higher, denom) %>%
+ summarise(
+   avg_tvhours = mean(tvhours)
+   ) %>%
+ ggplot() +
+ geom_point(mapping = aes(x = avg_tvhours, y = denom_higher))
+
+```
+
+
 
 # Strings
 
@@ -133,9 +242,15 @@ births <- US_births_1994_2003 %>%
 For each of the following formats (of the same date), pick the right `ymd()` function to parse them:
 
 ```{r}
-"2018 Feb 01"
-"2-1-18"
-"01/02/2018"
+ymd("2018 Feb 01")
+mdy("2-1-18")
+dmy("01/02/2018")
+ymd_hms("2017-01-11 01:30:55")
+wday(ymd("2018-02-01"))
+wday(ymd("2018-02-01"), label = TRUE)
+wday(ymd("2018-02-01"), label = TRUE, abbr = FALSE)
+
+
 ```
 
 ## Your Turn 8
@@ -149,12 +264,21 @@ Fill in the blanks to:
 
 ```{r, error = TRUE}
 births %>%
-  mutate(year = ___,
-    month = ___) %>%
-  group_by(___, ___) %>%
-  summarise(total_births = ___) %>%
+  mutate(
+    year = year(date),
+    month = month(date, label = TRUE)
+    ) %>%
+  group_by(year, month) %>%
+  summarise(
+    total_births = sum(births)) %>%
   ggplot() + 
-    geom_line(aes(x = month, y = total_births, group = year))
+    geom_line(aes(x = month, y = total_births, group = year, color = year))
+
+```
+
+```{r}
+hms::hms(seconds = 56, min = 34, hour = 12)
+unclass(hms(56, 34, 12))
 ```
 
 
