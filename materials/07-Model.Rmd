@@ -18,6 +18,9 @@ Fit the model on the slide and then examine the output. What does it look like?
 ```{r}
 mod_e <- lm(log(income) ~ education, data = wages)
 mod_e
+
+wages %>%
+ ggplot(aes(log(income))) + geom_histogram(binwidth = 0.25)
 ```
 
 ## Your Turn 2
@@ -28,8 +31,33 @@ Use a pipe to model `log(income)` against `height`. Then use broom and dplyr fun
 2. The **adj.r.squared** and **p.value** for the overall model
 
 ```{r, error = TRUE}
-mod_h <- wages %>% lm(    )
+mod_e <-lm(log(income) ~ education, data = wages)
+view(mod_e)
+class(mod_e)
+summary(mod_e) # give you all model parameters 
 
+# can pass the data using a dot for data = .
+
+mod_e <- wages %>%
+ lm(log(income) ~ education, data = .)
+summary(mod_e)
+
+mod_e %>% tidy() # now this is a tibble and you can reach in and grab the estimates 
+
+mod_e %>% glance()
+mod_e %>% augment()
+mod_e %>% augment(data = wages)
+
+mod_h <- wages %>% 
+  lm(log(income) ~ height, data = .)
+
+estimates <- mod_h %>% tidy()
+str(estimates)
+fit <- mod_h %>% glance()
+fit1 <- mod_h %>% glance() %>% select(adj.r.squared, p.value)
+str(fit)
+aug <- mod_h %>% augment()
+str(aug)
 
 ```
 
@@ -38,8 +66,13 @@ mod_h <- wages %>% lm(    )
 Model `log(income)` against `education` _and_ `height`. Do the coefficients change?
 
 ```{r, error = TRUE}
-mod_eh <- wages %>% lm(    )
-
+mod_eh <- wages %>% lm(log(income) ~ education + height, data = .)
+summary(mod_eh)
+mod_eh %>% 
+  tidy()
+wages %>% 
+  ggplot() + geom_histogram(aes(x = education, binwidth = 0.25))
+                            
 ```
 
 ## Your Turn 4
@@ -47,7 +80,11 @@ mod_eh <- wages %>% lm(    )
 Model `log(income)` against `education` and `height` and `sex`. Can you interpret the coefficients?
 
 ```{r, error = TRUE}
-mod_ehs <- wages %>%  lm(   )
+mod_ehs <- wages %>%
+ lm(log(income) ~ education + height + sex, data = .)
+mod_ehs %>% 
+  tidy()
+
 ```
 
 ## Your Turn 5
@@ -58,6 +95,15 @@ _Bonus: Overlay the plot on the original data points._
 
 ```{r}
 mod_h <- wages %>% lm(log(income) ~ height, data = .)
+mod_h %>% tidy()
+mod_h %>% glance()
+height1 <- mod_h %>% augment()
+
+mod_h %>%
+ augment(data = wages) %>%
+ ggplot(mapping = aes(x = height, y = .fitted)) +
+ geom_point(mapping = aes(y = log(income)), alpha = 0.1) +
+ geom_line(color = "blue")
 
 ```
 
@@ -67,6 +113,12 @@ Repeat the process to make a line graph of `height` vs `.fitted` colored by `sex
 
 ```{r}
 mod_ehs <- wages %>% lm(log(income) ~ education + height + sex, data = .)
+
+mod_ehs %>%
+ augment(data = wages) %>%
+ ggplot(mapping = aes(x = height, y = .fitted, color = sex)) +
+ geom_line() +
+ facet_wrap(~ education)
 
 ```
 
@@ -81,6 +133,29 @@ mod_h <- wages %>% lm(log(income) ~ height, data = .)
 mod_eh <- wages %>% lm(log(income) ~ education + height, data = .)
 mod_ehs <- wages %>% lm(log(income) ~ education + height + sex, data = .)
 
+wages %>%
+ spread_predictions(mod_h, mod_eh, mod_ehs)
+
+wages %>%
+ gather_predictions(mod_h, mod_eh, mod_ehs)
+
+wages %>%
+ gather_predictions(mod_h, mod_eh, mod_ehs) %>%
+ ggplot(mapping = aes(x = height, y = pred, color = model)) +
+ geom_line()
+
+wages %>%
+ gather_predictions(mod_h, mod_eh, mod_ehs) %>%
+ ggplot(mapping = aes(x = height, y = pred, color = model)) +
+ geom_line() +
+ facet_grid(sex ~ education)
+
+wages %>%
+ gather_predictions(mod_h, mod_eh, mod_ehs) %>%
+ filter(education > 11) %>%
+ ggplot(mapping = aes(x = height, y = pred, color = sex)) +
+ geom_line() +
+ facet_grid(model ~ education)
 
 ```
 
